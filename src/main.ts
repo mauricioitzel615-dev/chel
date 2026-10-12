@@ -27,7 +27,7 @@ class App implements OnInit {
   setKind(e: Event) { this.kind.set((e.target as HTMLSelectElement).value); }
   time(value: string) { return new Date(value).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); }
   async load() { try { const result = await firstValueFrom(this.http.get<Snapshot>('/api/state')); this.data.set(result); this.error.set(''); } catch { this.error.set('No se pudo conectar con el servicio. Revisa que la API esté desplegada.'); } }
-  async action(path: string, body: object) { this.busy.set(true); this.error.set(''); try { await firstValueFrom(this.http.post('/api/'+path,body)); await this.load(); } catch (e: any) { this.error.set(e?.error?.error ?? 'No se pudo completar la acción.'); } finally { this.busy.set(false); } }
+  async action(path: string, body: object) { this.busy.set(true); this.error.set(''); try { await firstValueFrom(this.http.post('/api/'+path,body)); await this.load(); } catch (e: any) { const response = e?.error; const message = typeof response === 'string' ? response : typeof response?.error === 'string' ? response.error : typeof response?.message === 'string' ? response.message : ''; this.error.set(message || `La API rechazó la operación (HTTP ${e?.status || 'sin respuesta'}). Revisa los registros de Functions en Vercel.`); } finally { this.busy.set(false); } }
   createTicket() { this.action('tickets',{kind:this.kind()}); }
   callNext(desk: number) { this.action('call',{desk}); }
   finish(desk: number) { this.action('finish',{desk}); }
